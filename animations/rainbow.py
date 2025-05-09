@@ -26,7 +26,7 @@ async def animate(
                 set_face_color(np, leds_per_face, face, RAINBOW_COLORS[(current_color_index+i)%len(RAINBOW_COLORS)])
         np.write()
         current_color_index = (current_color_index + 1) % len(RAINBOW_COLORS)
-        await asyncio.sleep_ms(200)
+        await asyncio.sleep_ms(1000)
         if stop_event.is_set():
             return
 
