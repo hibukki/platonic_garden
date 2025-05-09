@@ -1,0 +1,9 @@
+{
+  "led_per_side": 18,
+  "faces": [
+    {"layer": 0, "index": 0, "face_id": 0},
+    {"layer": 1, "index": 0, "face_id": 1},
+    {"layer": 1, "index": 1, "face_id": 2},
+    {"layer": 1, "index": 2, "face_id": 3}
+  ]
+}

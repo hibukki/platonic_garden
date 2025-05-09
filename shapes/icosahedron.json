@@ -1,0 +1,25 @@
+{
+  "led_per_face": 9,
+  "faces": [
+    {"layer": 1, "index": 2, "face_id": 0},
+    {"layer": 2, "index": 4, "face_id": 1},
+    {"layer": 2, "index": 5, "face_id": 2},
+    {"layer": 3, "index": 5, "face_id": 3},
+    {"layer": 4, "index": 2, "face_id": 4},
+    {"layer": 3, "index": 4, "face_id": 5},
+    {"layer": 3, "index": 3, "face_id": 6},
+    {"layer": 2, "index": 3, "face_id": 7},
+    {"layer": 2, "index": 2, "face_id": 8},
+    {"layer": 1, "index": 1, "face_id": 9},
+    {"layer": 2, "index": 1, "face_id": 10},
+    {"layer": 3, "index": 1, "face_id": 11},
+    {"layer": 3, "index": 2, "face_id": 12},
+    {"layer": 4, "index": 1, "face_id": 13},
+    {"layer": 5, "index": 0, "face_id": 14},
+    {"layer": 4, "index": 0, "face_id": 15},
+    {"layer": 3, "index": 0, "face_id": 16},
+    {"layer": 2, "index": 0, "face_id": 17},
+    {"layer": 1, "index": 0, "face_id": 18},
+    {"layer": 0, "index": 0, "face_id": 19}
+  ]
+}

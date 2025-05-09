@@ -1,0 +1,17 @@
+{
+  "led_per_side": 15,
+  "faces": [
+    {"layer": 1, "index": 0, "face_id": 0},
+    {"layer": 2, "index": 1, "face_id": 1},
+    {"layer": 3, "index": 0, "face_id": 2},
+    {"layer": 2, "index": 0, "face_id": 3},
+    {"layer": 1, "index": 4, "face_id": 4},
+    {"layer": 2, "index": 4, "face_id": 5},
+    {"layer": 1, "index": 3, "face_id": 6},
+    {"layer": 2, "index": 3, "face_id": 7},
+    {"layer": 2, "index": 2, "face_id": 8},
+    {"layer": 1, "index": 1, "face_id": 9},
+    {"layer": 1, "index": 2, "face_id": 10},
+    {"layer": 0, "index": 0, "face_id": 11}
+  ]
+}
