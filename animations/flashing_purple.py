@@ -17,6 +17,8 @@ async def animate(
     frame_time_ms = 1000/30
     while True:
         for i in range(num_steps):
+            if stop_event.is_set():
+                return
             frame_start = time.time_ns()
             for j in range(len(layers)):
                 layer_location = j * layer_ratio
@@ -28,6 +30,8 @@ async def animate(
             np.write()
             await asyncio.sleep_ms(int(frame_time_ms - (time.time_ns() - frame_start)/1000000))
         for i in range(reverse_start_step, -1, -1):
+            if stop_event.is_set():
+                return
             frame_start = time.time_ns()
             for j in range(len(layers)):
                 layer_location = j * layer_ratio

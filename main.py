@@ -13,7 +13,8 @@ from pathlib import Path
 
 
 ANIMATIONS = [
-    'flashing_purple'
+    'flashing_purple',
+    'rainbow'
 ]
 
 def get_layers(shape_faces: list[dict]) -> tuple[tuple[int, ...], ...]:
