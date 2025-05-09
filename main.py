@@ -16,12 +16,6 @@ ANIMATIONS = [
     'flashing_purple'
 ]
 
-COLORS = [
-    (255, 0, 0),  # red
-    (0, 255, 0),  # green
-    (0, 0, 255),  # blue
-]
-
 def get_layers(shape_faces: list[dict]) -> tuple[tuple[int, ...], ...]:
     if not shape_faces:
         return tuple()
