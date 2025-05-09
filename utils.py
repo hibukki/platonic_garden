@@ -15,12 +15,11 @@ class SharedState:
         async with self._lock:
             self._data = deepcopy(value)
 
-    async def update(self, fn: Callable[[Optional[Dict[Any, Any]]], Dict[Any, Any]]) -> None:
+    async def update(self, key: str, value: Any) -> None:
         async with self._lock:
-            # The function fn is expected to return a new dict or modify a copy.
-            # If fn modifies its input, deepcopy self._data before passing it to fn.
-            current_data_copy = deepcopy(self._data)
-            self._data = fn(current_data_copy) 
+            if self._data is None:
+                self._data = {}
+            self._data[key] = value
 
 
 async def read_until_null_terminator(reader):

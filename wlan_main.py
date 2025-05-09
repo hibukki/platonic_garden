@@ -95,7 +95,7 @@ async def start_ap(state: SharedState):
 async def choose_animation(state: SharedState):
     while True:
         animation = random.choice(ANIMATIONS)
-        await state.update(lambda x: dict(**x, animation=animation))
+        await state.update('animation', animation)
         await uasyncio.sleep(TIME_BETWEEN_ANIMATIONS_SECONDS)
         
 
