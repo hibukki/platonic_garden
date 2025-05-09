@@ -52,20 +52,33 @@ def set_face_color(np, leds_per_face, face_index, color):
         np[face_offset + i] = color
 
 
-def get_animations() -> list['ModuleType']:
-    return [getattr(__import__(f'animations.{name}'), name) for name in ANIMATIONS]
+def get_animations() -> dict[str, 'ModuleType']:
+    return {name: getattr(__import__(f'animations.{name}'), name) for name in ANIMATIONS}
 
 
-async def run_animations(np: neopixel.NeoPixel, leds_per_face: int, num_faces: int, layers: tuple[tuple[int, ...], ...]) -> None:
+async def run_animations(
+        np: neopixel.NeoPixel,
+        leds_per_face: int,
+        num_faces: int,
+        layers: tuple[tuple[int, ...], ...],
+        state: SharedState
+    ) -> None:
+    animations = get_animations()
+    current_animation = ''
+    task = None
+    stop_event = None
     while True:
         try:
-            animations = get_animations()
-            for animation in animations:
-                stop_event = asyncio.Event()
-                task = asyncio.create_task(animation.animate(np, leds_per_face, num_faces, layers, stop_event))
-                await asyncio.sleep(10)
-                stop_event.set()
-                await asyncio.gather(task)
+            new_animation = (await state.get()).get('animation')
+            if new_animation is not None:
+                if new_animation != current_animation:
+                    current_animation = new_animation
+                    if task is not None:
+                        stop_event.set()
+                        await asyncio.gather(task)
+                    stop_event = asyncio.Event()
+                    task = asyncio.create_task(animations[new_animation].animate(np, leds_per_face, num_faces, layers, stop_event))
+            await asyncio.sleep(0.05)
         except Exception as e:
             sys.print_exception(e)
             error_animation(np)
@@ -78,7 +91,7 @@ async def get_animation_name(state: SharedState):
             if not await is_wifi_connected():
                 connect_to_wifi()
         else:
-            state.update(lambda x: dict(**x, animation=animation_name))
+            await state.update(lambda x: dict(**x, animation=animation_name))
         await asyncio.sleep(1)
 
 
@@ -113,8 +126,10 @@ def main():
 
     init_animation(np)
 
+    state = SharedState()
     tasks = []
-    tasks.append(run_animations(np, leds_per_face, num_faces, layers))
+    tasks.append(run_animations(np, leds_per_face, num_faces, layers, state))
+    tasks.append(get_animation_name(state))
 
     asyncio.run(asyncio.gather(*tasks))
 

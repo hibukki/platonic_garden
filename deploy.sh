@@ -1,11 +1,13 @@
 #!/bin/bash
 
-mpremote fs mkdir shapes
-mpremote fs mkdir animations
-mpremote cp shapes/* :shapes
-mpremote cp animations/* :animations
-mpremote cp wifi_consts.py :wifi_consts.py
-mpremote cp utils.py :utils.py
-mpremote cp wifi_client.py :wifi_client.py
-mpremote cp main.py :main.py 
-mpremote reset
+PORT=${PORT:-/dev/cu.usbserial-210}
+
+mpremote connect "$PORT" fs mkdir shapes
+mpremote connect "$PORT" fs mkdir animations
+mpremote connect "$PORT" cp shapes/* :shapes
+mpremote connect "$PORT" cp animations/* :animations
+mpremote connect "$PORT" cp wifi_consts.py :wifi_consts.py
+mpremote connect "$PORT" cp utils.py :utils.py
+mpremote connect "$PORT" cp wifi_client.py :wifi_client.py
+mpremote connect "$PORT" cp main.py :main.py
+mpremote connect "$PORT" reset

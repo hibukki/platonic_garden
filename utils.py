@@ -4,7 +4,7 @@ from typing import Optional, Dict, Any, Callable
 
 class SharedState:
     def __init__(self, initial: Optional[Dict[Any, Any]] = None):
-        self._data: Optional[Dict[Any, Any]] = deepcopy(initial) if initial is not None else None
+        self._data: Optional[Dict[Any, Any]] = deepcopy(initial) if initial is not None else {}
         self._lock = asyncio.Lock()
 
     async def get(self) -> Optional[Dict[Any, Any]]:
