@@ -5,6 +5,7 @@ import asyncio
 from typing import TypeVar, Generic, Callable, Optional, Dict, Any, TYPE_CHECKING
 from copy import deepcopy
 import sys
+from read_sensor import read_sensor
 
 if TYPE_CHECKING:
     from types import ModuleType
@@ -61,13 +62,13 @@ def get_animations() -> list['ModuleType']:
     return [getattr(__import__(f'animations.{name}'), name) for name in ANIMATIONS]
 
 
-async def run_animations(np: neopixel.NeoPixel, leds_per_face: int, num_faces: int, layers: tuple[tuple[int, ...], ...]) -> None:
+async def run_animations(np: neopixel.NeoPixel, leds_per_face: int, num_faces: int, layers: tuple[tuple[int, ...], ...], state: SharedState) -> None:
     while True:
         try:
             animations = get_animations()
             for animation in animations:
                 stop_event = asyncio.Event()
-                task = asyncio.create_task(animation.animate(np, leds_per_face, num_faces, layers, stop_event))
+                task = asyncio.create_task(animation.animate(np, leds_per_face, num_faces, layers, stop_event, state))
                 await asyncio.sleep(10)
                 stop_event.set()
                 await asyncio.gather(task)
@@ -125,12 +126,15 @@ def main():
     
     leds_per_face, num_faces, layers = get_shape(Path('shapes/icosahedron.json'))
 
-    np = neopixel.NeoPixel(machine.Pin(18, machine.Pin.OUT), leds_per_face * num_faces)
+    np = neopixel.NeoPixel(machine.Pin(33, machine.Pin.OUT), 3)
+
+    state = SharedState({})
 
     init_animation(np)
 
     tasks = []
-    tasks.append(run_animations(np, leds_per_face, num_faces, layers))
+    tasks.append(read_sensor(state))
+    tasks.append(run_animations(np, leds_per_face, num_faces, layers, state))
 
     asyncio.run(asyncio.gather(*tasks))
 

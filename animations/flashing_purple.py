@@ -1,24 +1,25 @@
 import asyncio
 from animations.utils import set_face_color
-
+from main import SharedState
 
 async def animate(
         np: neopixel.NeoPixel,
         leds_per_face: int,
         num_faces: int,
         layers: tuple[tuple[int, ...], ...],
-        stop_event: asyncio.Event) -> None:
+        stop_event: asyncio.Event,
+        state: SharedState) -> None:
     
-    layer_ratio = 100 / len(layers)
-    thickness = 20
     while True:
-        for i in range(100):
-            for j in range(len(layers)):
-                layer_location = j * layer_ratio
-                if layer_location >= i and layer_location < i + thickness:
-                    layer_color = (255, 0, 255)
-                else:
-                    layer_color = (0, 0, 0)
-            np.write()
-            await asyncio.sleep(0.5)
-
+        distance = await state.get()
+        if distance == {}:
+            distance = 0
+        else:
+            distance = distance['distance']
+        clamped_distance = max(0, min(distance, 1000))
+        scaled_distance = int(clamped_distance * 255 / 1000)
+        np.fill((0, 255 - scaled_distance, scaled_distance))
+        np.write()
+        await asyncio.sleep(0.01)
+    
+   
