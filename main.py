@@ -77,7 +77,7 @@ async def run_animations(
                         stop_event.set()
                         await asyncio.gather(task)
                     stop_event = asyncio.Event()
-                    task = asyncio.create_task(animations[new_animation].animate(np, leds_per_face, num_faces, layers, stop_event))
+                    task = asyncio.create_task(animations[new_animation].animate(np, leds_per_face, num_faces, layers, stop_event, state))
             await asyncio.sleep(0.05)
         except Exception as e:
             sys.print_exception(e)

@@ -1,6 +1,7 @@
 import asyncio
 import time
 from animations.utils import set_face_color
+from utils import SharedState
 
 
 async def animate(
@@ -8,7 +9,9 @@ async def animate(
         leds_per_face: int,
         num_faces: int,
         layers: tuple[tuple[int, ...], ...],
-        stop_event: asyncio.Event) -> None:
+        stop_event: asyncio.Event,
+        state: SharedState
+    ) -> None:
     
     num_steps = 100
     layer_ratio = num_steps / len(layers)

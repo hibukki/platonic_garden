@@ -1,6 +1,7 @@
 import asyncio
 import time
 from animations.utils import set_face_color
+from utils import SharedState
 
 RAINBOW_COLORS = [
     (255, 0, 0),
@@ -18,7 +19,9 @@ async def animate(
         leds_per_face: int,
         num_faces: int,
         layers: tuple[tuple[int, ...], ...],
-        stop_event: asyncio.Event) -> None:
+        stop_event: asyncio.Event,
+        state: SharedState
+) -> None:
     current_color_index = 0
     while True:
         for i in range(len(layers)):
