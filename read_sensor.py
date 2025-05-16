@@ -3,8 +3,13 @@ from machine import Pin, SoftI2C, Timer
 from VL53L0X import VL53L0X
 import asyncio
 import utime  # Add this for timing measurements
+from typing import TYPE_CHECKING
 
-async def read_sensor(state):
+if TYPE_CHECKING:
+    from utils import SharedState
+
+
+async def read_sensor(state: SharedState):
     print("setting up i2c")
     sda = Pin(21)
     scl = Pin(22)
@@ -21,7 +26,7 @@ async def read_sensor(state):
     print(i2c.scan())
 
     # Function to shutdown all sensors
-    def xshutarrayreset():
+    async def xshutarrayreset():
         for pin in tofArray:
             pin.value(False)
         await asyncio.sleep(0.05)  # Give time to shut down completely
@@ -48,7 +53,7 @@ async def read_sensor(state):
         else:
             return None
 
-    xshutarrayreset()
+    await xshutarrayreset()
     tof = await configure_tof(3)  # Using sensor 3 (Xshut3)
     tof.set_address(0x32)
 
@@ -83,7 +88,7 @@ async def read_sensor(state):
         
         if distance is not None:
             print(f"Distances: {distance}mm, {distance2}mm - Read time: {elapsed_ms}ms (min: {min_read_time}ms, avg: {avg_read_time:.1f}ms, max: {max_read_time}ms)")
-            await state.set({"distance": distance})
+            await state.update("distance", distance)
         else:
             print("Failed to read sensor")
             
