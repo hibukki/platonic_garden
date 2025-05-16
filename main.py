@@ -5,23 +5,17 @@ import asyncio
 from typing import TypeVar, Generic, Callable, Optional, Dict, Any, TYPE_CHECKING
 from copy import deepcopy
 import sys
-from read_sensor import read_sensor
 
 if TYPE_CHECKING:
     from types import ModuleType
 
 from pathlib import Path
+from utils import SharedState
+from wifi_client import connect_to_wifi, fetch_animation_data, is_wifi_connected
+from animations import ANIMATIONS
 
 
-ANIMATIONS = [
-    'flashing_purple'
-]
 
-COLORS = [
-    (255, 0, 0),  # red
-    (0, 255, 0),  # green
-    (0, 0, 255),  # blue
-]
 
 def get_layers(shape_faces: list[dict]) -> tuple[tuple[int, ...], ...]:
     if not shape_faces:
@@ -58,23 +52,47 @@ def set_face_color(np, leds_per_face, face_index, color):
         np[face_offset + i] = color
 
 
-def get_animations() -> list['ModuleType']:
-    return [getattr(__import__(f'animations.{name}'), name) for name in ANIMATIONS]
+def get_animations() -> dict[str, 'ModuleType']:
+    return {name: getattr(__import__(f'animations.{name}'), name) for name in ANIMATIONS}
 
 
-async def run_animations(np: neopixel.NeoPixel, leds_per_face: int, num_faces: int, layers: tuple[tuple[int, ...], ...], state: SharedState) -> None:
+async def run_animations(
+        np: neopixel.NeoPixel,
+        leds_per_face: int,
+        num_faces: int,
+        layers: tuple[tuple[int, ...], ...],
+        state: SharedState
+    ) -> None:
+    animations = get_animations()
+    current_animation = ''
+    task = None
+    stop_event = None
     while True:
         try:
-            animations = get_animations()
-            for animation in animations:
-                stop_event = asyncio.Event()
-                task = asyncio.create_task(animation.animate(np, leds_per_face, num_faces, layers, stop_event, state))
-                await asyncio.sleep(10)
-                stop_event.set()
-                await asyncio.gather(task)
+            new_animation = (await state.get()).get('animation')
+            if new_animation is not None:
+                if new_animation != current_animation:
+                    current_animation = new_animation
+                    if task is not None:
+                        stop_event.set()
+                        await asyncio.gather(task)
+                    stop_event = asyncio.Event()
+                    task = asyncio.create_task(animations[new_animation].animate(np, leds_per_face, num_faces, layers, stop_event, state))
+            await asyncio.sleep(0.05)
         except Exception as e:
             sys.print_exception(e)
             error_animation(np)
+
+
+async def get_animation_name(state: SharedState):
+    while True:
+        animation_name = await fetch_animation_data()
+        if animation_name is None:
+            if not await is_wifi_connected():
+                connect_to_wifi()
+        else:
+            await state.update('animation', animation_name)
+        await asyncio.sleep(1)
 
 
 def error_animation(np: neopixel.NeoPixel) -> None:
@@ -100,43 +118,21 @@ def init_animation(np: neopixel.NeoPixel) -> None:
         time.sleep(1)
 
 
-class SharedState:
-    def __init__(self, initial: Optional[Dict[Any, Any]] = None):
-        self._data: Optional[Dict[Any, Any]] = deepcopy(initial) if initial is not None else None
-        self._lock = asyncio.Lock()
-
-    async def get(self) -> Optional[Dict[Any, Any]]:
-        async with self._lock:
-            return deepcopy(self._data)
-
-    async def set(self, value: Dict[Any, Any]) -> None:
-        async with self._lock:
-            self._data = deepcopy(value)
-
-    async def update(self, fn: Callable[[Optional[Dict[Any, Any]]], Dict[Any, Any]]) -> None:
-        async with self._lock:
-            # The function fn is expected to return a new dict or modify a copy.
-            # If fn modifies its input, deepcopy self._data before passing it to fn.
-            current_data_copy = deepcopy(self._data)
-            self._data = fn(current_data_copy)
-
-
 def main():
-    current = 0
-    
+    connect_to_wifi()
     leds_per_face, num_faces, layers = get_shape(Path('shapes/icosahedron.json'))
 
-    np = neopixel.NeoPixel(machine.Pin(33, machine.Pin.OUT), 3)
-
-    state = SharedState({})
+    np = neopixel.NeoPixel(machine.Pin(18, machine.Pin.OUT), leds_per_face * num_faces)
 
     init_animation(np)
 
+    state = SharedState()
     tasks = []
-    tasks.append(read_sensor(state))
     tasks.append(run_animations(np, leds_per_face, num_faces, layers, state))
+    tasks.append(get_animation_name(state))
 
     asyncio.run(asyncio.gather(*tasks))
 
 if __name__ == '__main__':
     main()
+
