@@ -13,8 +13,7 @@ from pathlib import Path
 from utils import SharedState
 from wifi_client import connect_to_wifi, fetch_animation_data, is_wifi_connected
 from animations import ANIMATIONS
-
-
+from read_sensor import read_sensor
 
 
 def get_layers(shape_faces: list[dict]) -> tuple[tuple[int, ...], ...]:
@@ -130,7 +129,8 @@ def main():
     tasks = []
     tasks.append(run_animations(np, leds_per_face, num_faces, layers, state))
     tasks.append(get_animation_name(state))
-
+    tasks.append(read_sensor(state))
+    
     asyncio.run(asyncio.gather(*tasks))
 
 if __name__ == '__main__':
