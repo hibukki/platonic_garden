@@ -13,11 +13,14 @@ async def read_sensor(state: SharedState):
     Xshut0 = Pin(23, Pin.OUT, value=False)
     Xshut1 = Pin(4, Pin.OUT, value=False)
     Xshut2 = Pin(15, Pin.OUT, value=False)
-    Xshut3 = Pin(12, Pin.OUT, value=False)
-    Xshut4 = Pin(19, Pin.OUT, value=False)
+    Xshut3 = Pin(27, Pin.OUT, value=False)
+    Xshut4 = Pin(25, Pin.OUT, value=False)
     # THIS PIN IS INPUT ONLY FUCK YOU
     #Xshut4 = Pin (39, Pin.OUT,value=True)
     pins = [Xshut0, Xshut1, Xshut2, Xshut3, Xshut4]
+    
+    # Initialize sensor_temp_array with correct length
+    sensor_temp_array = [0] * len(pins)
 
     # Use a higher I2C frequency for faster communication
     i2c = SoftI2C(sda=sda, scl=scl, freq=400000)  # Max speed for better performance
@@ -72,26 +75,30 @@ async def read_sensor(state: SharedState):
     read_count = 0
     min_read_time = float('inf')
     max_read_time = 0
-    
+
     while True:
         # Measure how long the readings take
         start_time = utime.ticks_ms()
         
-        distances = []
+        sensor_readings = []
         for i, sensor_tof in enumerate(tofs): # Use enumerate for index
             if sensor_tof is not None:
                 try:
                     distance = max(0, sensor_tof.ping() - 50) # Adjusted offset if necessary
-                    distances.append(distance)
+                    # Update temperature based on distance
+                    sensor_temp_array[i] = sensor_temp_array[i] + 10 if distance < 500 else sensor_temp_array[i] - 1
+                    sensor_temp_array[i] = min(max(0, sensor_temp_array[i]), 255)
+                    # Create a tuple with distance and temperature
+                    sensor_readings.append((distance, sensor_temp_array[i]))
                 except Exception as e:
                     # Log error and record None for this sensor in this cycle
                     print(f"Error reading from sensor {i} (expected addr {hex(0x33 + i)}): {e}")
-                    distances.append(None)
+                    sensor_readings.append((None, sensor_temp_array[i]))
                     # Optional: could mark tofs[i] = None to stop trying to read from it.
                     # For now, it will retry on the next cycle.
             else:
                 # Sensor was not configured or failed during configuration
-                distances.append(None)
+                sensor_readings.append((None, sensor_temp_array[i]))
         
         # Calculate elapsed time
         end_time = utime.ticks_ms()
@@ -104,8 +111,8 @@ async def read_sensor(state: SharedState):
         max_read_time = max(max_read_time, elapsed_ms)
         avg_read_time = total_read_time / read_count
         
-        await state.update("distances", distances)
-        print(distances)
+        await state.update("distances", sensor_readings)
+        #print(f"\rDistances: {sensor_readings} Time: {avg_read_time}ms", end="")
         await asyncio.sleep(0.1)
 
 
