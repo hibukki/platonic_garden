@@ -8,14 +8,14 @@ from utils import read_until_null_terminator
 import wifi_consts
 import json
 
-def connect_to_wifi():
-    """Connects to Wi-Fi synchronously. Returns True on success, False on failure."""
+async def connect_to_wifi():
+    """Connects to Wi-Fi asynchronously. Returns True on success, False on failure."""
     wlan = None
     try:
         wlan = network.WLAN(network.STA_IF)
         
         wlan.active(False)
-        time.sleep_ms(200) # Allow time for deactivation
+        await uasyncio.sleep(0.2)  # Allow time for deactivation
         
         wlan.active(True)
         
@@ -36,13 +36,13 @@ def connect_to_wifi():
         if not wlan.isconnected():
             wlan.connect(wifi_consts.WIFI_SSID, wifi_consts.WIFI_PASSWORD)
             
-            max_wait = 20 # Increased wait time
+            max_wait = 20  # Increased wait time
             while max_wait > 0:
                 status = wlan.status()
                 if status == network.STAT_GOT_IP or status < 0:
                     break
                 max_wait -= 1
-                time.sleep(1) # Use synchronous sleep
+                await uasyncio.sleep(1)  # Use async sleep
         
         if wlan.isconnected():
             return True
@@ -64,14 +64,14 @@ def connect_to_wifi():
             elif status == 210:
                 error_message = "BEACON_TIMEOUT - AP not responding"
             
-            wlan.active(False) # Try to deactivate on failure
+            wlan.active(False)  # Try to deactivate on failure
             return False
             
     except OSError as e:
         sys.print_exception(e)
         if wlan:
             try:
-                wlan.active(False) # Try to ensure it's off
+                wlan.active(False)  # Try to ensure it's off
             except Exception as e_deact:
                 sys.print_exception(e_deact)
         return False
