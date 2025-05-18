@@ -117,9 +117,7 @@ def init_animation(np: neopixel.NeoPixel) -> None:
         np.write()
         time.sleep(1)
 
-
-async def main():
-    await connect_to_wifi()
+def main():
     leds_per_face, num_faces, layers = get_shape(Path('shapes/dodecahedron.json'))
 
     np = neopixel.NeoPixel(machine.Pin(18, machine.Pin.OUT), leds_per_face * num_faces)
@@ -132,8 +130,8 @@ async def main():
     tasks.append(get_animation_name(state))
     tasks.append(read_sensor(state))
     
-    await asyncio.gather(*tasks)
+    asyncio.run(asyncio.gather(*tasks))
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    main()
 
