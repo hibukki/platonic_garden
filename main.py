@@ -90,8 +90,8 @@ async def get_animation_name(state: SharedState):
             if not await is_wifi_connected():
                 await connect_to_wifi()
         else:
-            await state.update('animation', "flashing_purple")
-            #await state.update('animation', animation_name)
+            #await state.update('animation', "flashing_purple")
+            await state.update('animation', animation_name)
         await asyncio.sleep(1)
 
 
