@@ -67,7 +67,7 @@ async def animate(
         if total_frames % 100 == 0:  # Update every 100 frames
             elapsed_time = time.time() - start_time
             fps = total_frames / elapsed_time
-            print(f"Average framerate: {fps:.2f} FPS", end="")
+            print(f"Average framerate: {fps:.2f} FPS")
             
         await asyncio.sleep_ms(int(frame_time_ms - (time.time_ns() - frame_start)/1000000))
         return False  # Continue animation

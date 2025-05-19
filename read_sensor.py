@@ -14,6 +14,8 @@ async def read_sensor(state: SharedState):
     Xshut2 = Pin(15, Pin.OUT, value=False)
     Xshut3 = Pin(27, Pin.OUT, value=False)
     Xshut4 = Pin(25, Pin.OUT, value=False)
+    Xshut3 = Pin(27, Pin.OUT, value=False)
+    Xshut4 = Pin(25, Pin.OUT, value=False)
     # THIS PIN IS INPUT ONLY FUCK YOU
     #Xshut4 = Pin (39, Pin.OUT,value=True)
     pins = [Xshut0, Xshut1, Xshut2, Xshut3, Xshut4]
@@ -32,7 +34,7 @@ async def read_sensor(state: SharedState):
         await asyncio.sleep(0.05)  # Give time to shut down completely
 
     # Configure a single sensor
-    async def configure_tof(sensor_index):
+    async def configure_tof(sensor_index, address_already_set=False):
         # Activate only the requested sensor
         # Assumes all others are off or at different addresses due to prior xshutarrayreset and sequential config
         pins[sensor_index].value(True)
@@ -40,8 +42,13 @@ async def read_sensor(state: SharedState):
 
         try:
             # Attempt to initialize the sensor (targets default address 0x29)
-            tof = VL53L0X(i2c)
-            
+            new_address = 0x33 + sensor_index
+
+            if not address_already_set:
+                tof = VL53L0X(i2c)
+            if address_already_set:
+                tof = VL53L0X(i2c, new_address)
+                
             # Configure timing and pulse periods
             tof.set_measurement_timing_budget(20000)
             tof.set_Vcsel_pulse_period(tof.vcsel_period_type[0], 18) # Period_pclks, Vcsel_period
@@ -51,8 +58,8 @@ async def read_sensor(state: SharedState):
             tof.ping()
             await asyncio.sleep(0.01) # Short delay after ping
             
-            new_address = 0x33 + sensor_index
-            tof.set_address(new_address)
+            if not address_already_set:
+                tof.set_address(new_address)
             print(f"Sensor {sensor_index} configured successfully at address {hex(new_address)}")
             return tof
         except Exception as e:
