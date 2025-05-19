@@ -5,7 +5,6 @@ import asyncio
 import utime  # Add this for timing measurements
 from utils import SharedState
 
-
 async def read_sensor(state: SharedState):
     print("setting up i2c")
     sda = Pin(21)
@@ -61,22 +60,35 @@ async def read_sensor(state: SharedState):
             pins[sensor_index].value(False)  # Shut down the problematic sensor
             return None
 
-    await xshutarrayreset()
-    tofs = []
-    for i in range(len(pins)):
-        tof = await configure_tof(i)
-        if tof is not None:
-            tofs.append(tof)
-        else:
-            tofs.append(None)
+    async def initialize_sensors(pins, i2c):
+        await xshutarrayreset()
+        tofs = []
+        for i in range(len(pins)):
+            tof = await configure_tof(i)
+            if tof is not None:
+                tofs.append(tof)
+            else:
+                tofs.append(None)
+        return tofs
+
+    tofs = await initialize_sensors(pins, i2c)
     
     # Statistics variables
     total_read_time = 0
     read_count = 0
     min_read_time = float('inf')
     max_read_time = 0
+    last_init_time = utime.ticks_ms()  # Track when we last initialized sensors
+    REINIT_INTERVAL = 20 * 60 * 1000  # 20 minutes in milliseconds
 
     while True:
+        # Check if we need to reinitialize sensors
+        current_time = utime.ticks_ms()
+        if utime.ticks_diff(current_time, last_init_time) >= REINIT_INTERVAL:
+            print("\nReinitializing sensors...")
+            tofs = await initialize_sensors(pins, i2c)
+            last_init_time = current_time
+        
         # Measure how long the readings take
         start_time = utime.ticks_ms()
         
@@ -94,6 +106,7 @@ async def read_sensor(state: SharedState):
                     # Log error and record None for this sensor in this cycle
                     print(f"Error reading from sensor {i} (expected addr {hex(0x33 + i)}): {e}")
                     sensor_readings.append((None, sensor_temp_array[i]))
+                    tofs = await initialize_sensors(pins, i2c)
                     # Optional: could mark tofs[i] = None to stop trying to read from it.
                     # For now, it will retry on the next cycle.
             else:

@@ -88,8 +88,9 @@ async def get_animation_name(state: SharedState):
         animation_name = await fetch_animation_data()
         if animation_name is None:
             if not await is_wifi_connected():
-                connect_to_wifi()
+                await connect_to_wifi()
         else:
+            #await state.update('animation', "flashing_purple")
             await state.update('animation', animation_name)
         await asyncio.sleep(1)
 
@@ -116,10 +117,8 @@ def init_animation(np: neopixel.NeoPixel) -> None:
         np.write()
         time.sleep(1)
 
-
 def main():
-    connect_to_wifi()
-    leds_per_face, num_faces, layers = get_shape(Path('shapes/icosahedron.json'))
+    leds_per_face, num_faces, layers = get_shape(Path('shapes/dodecahedron.json'))
 
     np = neopixel.NeoPixel(machine.Pin(18, machine.Pin.OUT), leds_per_face * num_faces)
 
